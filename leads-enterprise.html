@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leads Management - Enterprise CRM</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .lead-card { transition: all 0.3s ease; }
+        .lead-card:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.15); }
+        .score-bar { transition: width 0.5s ease; }
+        .temperature-hot { background: linear-gradient(135deg, #ef4444, #dc2626); }
+        .temperature-warm { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .temperature-cold { background: linear-gradient(135deg, #6b7280, #4b5563); }
+        .pipeline-stage { transition: all 0.3s ease; }
+        .pipeline-stage:hover { background-color: #f8fafc; }
+        .fade-in { animation: fadeIn 0.5s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <h1 class="text-2xl font-bold text-gray-900">
+                        <i class="fas fa-user-plus text-blue-600 mr-2"></i>
+                        Leads Management
+                    </h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button onclick="showCreateLeadModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center">
+                        <i class="fas fa-plus mr-2"></i>
+                        New Lead
+                    </button>
+                    <button onclick="showImportModal()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center">
+                        <i class="fas fa-upload mr-2"></i>
+                        Import
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Analytics Dashboard -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-2 bg-blue-100 rounded-lg">
+                        <i class="fas fa-users text-blue-600 text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Total Leads</p>
+                        <p class="text-2xl font-bold text-gray-900" id="totalLeads">1,247</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-2 bg-green-100 rounded-lg">
+                        <i class="fas fa-chart-line text-green-600 text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Conversion Rate</p>
+                        <p class="text-2xl font-bold text-gray-900" id="conversionRate">25.8%</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-2 bg-orange-100 rounded-lg">
+                        <i class="fas fa-fire text-orange-600 text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Hot Leads</p>
+                        <p class="text-2xl font-bold text-gray-900" id="hotLeads">34</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-2 bg-purple-100 rounded-lg">
+                        <i class="fas fa-star text-purple-600 text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Avg. Score</p>
+                        <p class="text-2xl font-bold text-gray-900" id="avgScore">67</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- View Toggle & Filters -->
+        <div class="bg-white rounded-lg shadow mb-6">
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+                    <div class="flex items-center space-x-4 mb-4 lg:mb-0">
+                        <div class="flex bg-gray-100 rounded-lg p-1">
+                            <button onclick="switchView('list')" id="listViewBtn" class="px-4 py-2 rounded-md text-sm font-medium bg-white text-gray-900 shadow">
+                                <i class="fas fa-list mr-2"></i>List
+                            </button>
+                            <button onclick="switchView('pipeline')" id="pipelineViewBtn" class="px-4 py-2 rounded-md text-sm font-medium text-gray-500 hover:text-gray-900">
+                                <i class="fas fa-columns mr-2"></i>Pipeline
+                            </button>
+                            <button onclick="switchView('analytics')" id="analyticsViewBtn" class="px-4 py-2 rounded-md text-sm font-medium text-gray-500 hover:text-gray-900">
+                                <i class="fas fa-chart-bar mr-2"></i>Analytics
+                            </button>
+                        </div>
+                    </div>
+                    <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
+                        <div class="relative">
+                            <input type="text" id="searchInput" placeholder="Search leads..." 
+                                   class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                        </div>
+                        <select id="statusFilter" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <option value="">All Statuses</option>
+                        </select>
+                        <select id="sourceFilter" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <option value="">All Sources</option>
+                        </select>
+                        <select id="temperatureFilter" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <option value="">All Temperatures</option>
+                            <option value="hot">Hot</option>
+                            <option value="warm">Warm</option>
+                            <option value="cold">Cold</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Views -->
+        <div id="listView" class="fade-in">
+            <div class="bg-white rounded-lg shadow overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lead</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Score</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Source</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Temperature</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leadsTableBody" class="bg-white divide-y divide-gray-200">
+                            <!-- Leads will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pipeline View -->
+        <div id="pipelineView" class="hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-6" id="pipelineColumns">
+                <!-- Pipeline columns will be populated here -->
+            </div>
+        </div>
+
+        <!-- Analytics View -->
+        <div id="analyticsView" class="hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Conversion Funnel</h3>
+                    <canvas id="funnelChart"></canvas>
+                </div>
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Leads by Source</h3>
+                    <canvas id="sourceChart"></canvas>
+                </div>
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Monthly Trend</h3>
+                    <canvas id="trendChart"></canvas>
+                </div>
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Lead Scoring Distribution</h3>
+                    <canvas id="scoreChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Lead Modal -->
+    <div id="createLeadModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-lg max-w-4xl w-full mx-4 max-h-[95vh] overflow-y-auto">
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-medium text-gray-900">Create New Lead</h3>
+                    <button onclick="hideCreateLeadModal()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            <form id="createLeadForm" class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Personal Information -->
+                    <div class="space-y-4">
+                        <h4 class="text-md font-medium text-gray-900">Personal Information</h4>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">First Name *</label>
+                                <input type="text" name="first_name" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Last Name *</label>
+                                <input type="text" name="last_name" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+                            <input type="email" name="email" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                            <input type="tel" name="phone" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Job Title</label>
+                            <input type="text" name="job_title" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        </div>
+                    </div>
+
+                    <!-- Company Information -->
+                    <div class="space-y-4">
+                        <h4 class="text-md font-medium text-gray-900">Company Information</h4>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Company</label>
+                            <input type="text" name="company" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Website</label>
+                            <input type="url" name="website" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Industry</label>
+                            <input type="text" name="industry" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Company Size</label>
+                            <select name="company_size" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                <option value="">Select size</option>
+                                <option value="1-10">1-10 employees</option>
+                                <option value="11-50">11-50 employees</option>
+                                <option value="51-200">51-200 employees</option>
+                                <option value="201-500">201-500 employees</option>
+                                <option value="501-1000">501-1000 employees</option>
+                                <option value="1000+">1000+ employees</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Annual Revenue</label>
+                            <input type="number" name="annual_revenue" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lead Classification -->
+                <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Lead Source</label>
+                        <select name="lead_source_id" id="leadSourceSelect" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <option value="">Select source</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Temperature</label>
+                        <select name="temperature" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <option value="cold">Cold</option>
+                            <option value="warm">Warm</option>
+                            <option value="hot">Hot</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+                        <select name="priority" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <option value="low">Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                            <option value="urgent">Urgent</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Notes -->
+                <div class="mt-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                    <textarea name="notes" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
+                </div>
+
+                <div class="mt-6 flex justify-end space-x-3">
+                    <button type="button" onclick="hideCreateLeadModal()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
+                        Cancel
+                    </button>
+                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">
+                        Create Lead
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Lead Details Modal -->
+    <div id="leadDetailsModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-lg max-w-6xl w-full mx-4 max-h-[95vh] overflow-y-auto">
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-medium text-gray-900" id="leadDetailsTitle">Lead Details</h3>
+                    <button onclick="hideLeadDetailsModal()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            <div id="leadDetailsContent" class="p-6">
+                <!-- Lead details will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <script src="js/enterprise-app.js"></script>
+    <script>
+        // Leads Management System
+        class LeadsManager {
+            constructor() {
+                this.currentView = 'list';
+                this.leads = [];
+                this.sources = [];
+                this.statuses = [];
+                this.analytics = {};
+                this.init();
+            }
+
+            async init() {
+                await this.loadData();
+                this.setupEventListeners();
+                this.renderCurrentView();
+            }
+
+            async loadData() {
+                try {
+                    const [leadsRes, sourcesRes, statusesRes, analyticsRes] = await Promise.all([
+                        fetch('/api/leads?action=list'),
+                        fetch('/api/leads?action=sources'),
+                        fetch('/api/leads?action=statuses'),
+                        fetch('/api/leads?action=analytics')
+                    ]);
+
+                    this.leads = (await leadsRes.json()).leads || [];
+                    this.sources = (await sourcesRes.json()).sources || [];
+                    this.statuses = (await statusesRes.json()).statuses || [];
+                    this.analytics = (await analyticsRes.json()).analytics || {};
+
+                    this.populateFilters();
+                    this.updateAnalyticsDashboard();
+                } catch (error) {
+                    console.error('Error loading leads data:', error);
+                }
+            }
+
+            populateFilters() {
+                // Populate status filter
+                const statusFilter = document.getElementById('statusFilter');
+                statusFilter.innerHTML = '<option value="">All Statuses</option>';
+                this.statuses.forEach(status => {
+                    statusFilter.innerHTML += `<option value="${status.id}">${status.name}</option>`;
+                });
+
+                // Populate source filter
+                const sourceFilter = document.getElementById('sourceFilter');
+                sourceFilter.innerHTML = '<option value="">All Sources</option>';
+                this.sources.forEach(source => {
+                    sourceFilter.innerHTML += `<option value="${source.id}">${source.name}</option>`;
+                });
+
+                // Populate lead source select in create modal
+                const leadSourceSelect = document.getElementById('leadSourceSelect');
+                this.sources.forEach(source => {
+                    leadSourceSelect.innerHTML += `<option value="${source.id}">${source.name}</option>`;
+                });
+            }
+
+            updateAnalyticsDashboard() {
+                if (this.analytics.overview) {
+                    document.getElementById('totalLeads').textContent = this.analytics.overview.total_leads.toLocaleString();
+                    document.getElementById('conversionRate').textContent = this.analytics.overview.conversion_rate + '%';
+                    document.getElementById('hotLeads').textContent = this.analytics.overview.hot_leads;
+                    document.getElementById('avgScore').textContent = this.analytics.overview.average_score;
+                }
+            }
+
+            setupEventListeners() {
+                // Search functionality
+                document.getElementById('searchInput').addEventListener('input', (e) => {
+                    this.filterLeads();
+                });
+
+                // Filter functionality
+                ['statusFilter', 'sourceFilter', 'temperatureFilter'].forEach(filterId => {
+                    document.getElementById(filterId).addEventListener('change', () => {
+                        this.filterLeads();
+                    });
+                });
+
+                // Create lead form
+                document.getElementById('createLeadForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.createLead();
+                });
+            }
+
+            switchView(view) {
+                this.currentView = view;
+                
+                // Update buttons
+                document.querySelectorAll('[id$="ViewBtn"]').forEach(btn => {
+                    btn.className = btn.className.replace('bg-white text-gray-900 shadow', 'text-gray-500 hover:text-gray-900');
+                });
+                document.getElementById(view + 'ViewBtn').className = document.getElementById(view + 'ViewBtn').className.replace('text-gray-500 hover:text-gray-900', 'bg-white text-gray-900 shadow');
+
+                // Show/hide views
+                ['listView', 'pipelineView', 'analyticsView'].forEach(viewId => {
+                    document.getElementById(viewId).classList.add('hidden');
+                });
+                document.getElementById(view + 'View').classList.remove('hidden');
+
+                this.renderCurrentView();
+            }
+
+            renderCurrentView() {
+                switch (this.currentView) {
+                    case 'list':
+                        this.renderListView();
+                        break;
+                    case 'pipeline':
+                        this.renderPipelineView();
+                        break;
+                    case 'analytics':
+                        this.renderAnalyticsView();
+                        break;
+                }
+            }
+
+            renderListView() {
+                const tbody = document.getElementById('leadsTableBody');
+                tbody.innerHTML = '';
+
+                this.leads.forEach(lead => {
+                    const row = document.createElement('tr');
+                    row.className = 'hover:bg-gray-50';
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
+                                    <span class="text-sm font-medium text-gray-700">${lead.first_name[0]}${lead.last_name[0]}</span>
+                                </div>
+                                <div class="ml-4">
+                                    <div class="text-sm font-medium text-gray-900">${lead.first_name} ${lead.last_name}</div>
+                                    <div class="text-sm text-gray-500">${lead.email}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">${lead.company}</div>
+                            <div class="text-sm text-gray-500">${lead.job_title}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="w-16 bg-gray-200 rounded-full h-2 mr-2">
+                                    <div class="bg-blue-600 h-2 rounded-full score-bar" style="width: ${lead.lead_score}%"></div>
+                                </div>
+                                <span class="text-sm font-medium text-gray-900">${lead.lead_score}</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" 
+                                  style="background-color: ${lead.status_color}20; color: ${lead.status_color};">
+                                ${lead.status_name}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${lead.source_name}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium temperature-${lead.temperature} text-white">
+                                <i class="fas fa-thermometer-${lead.temperature === 'hot' ? 'full' : lead.temperature === 'warm' ? 'half' : 'empty'} mr-1"></i>
+                                ${lead.temperature.charAt(0).toUpperCase() + lead.temperature.slice(1)}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <button onclick="leadsManager.viewLeadDetails(${lead.id})" class="text-indigo-600 hover:text-indigo-900 mr-3">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button onclick="leadsManager.editLead(${lead.id})" class="text-blue-600 hover:text-blue-900 mr-3">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button onclick="leadsManager.convertLead(${lead.id})" class="text-green-600 hover:text-green-900">
+                                <i class="fas fa-exchange-alt"></i>
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
+
+            renderPipelineView() {
+                const pipelineColumns = document.getElementById('pipelineColumns');
+                pipelineColumns.innerHTML = '';
+
+                this.statuses.forEach(status => {
+                    const statusLeads = this.leads.filter(lead => lead.status_name === status.name);
+                    
+                    const column = document.createElement('div');
+                    column.className = 'bg-gray-100 rounded-lg p-4';
+                    column.innerHTML = `
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="font-medium text-gray-900">${status.name}</h3>
+                            <span class="bg-gray-200 text-gray-700 text-xs px-2 py-1 rounded-full">${statusLeads.length}</span>
+                        </div>
+                        <div class="space-y-3" id="pipeline-${status.id}">
+                            ${statusLeads.map(lead => `
+                                <div class="bg-white rounded-lg p-4 shadow-sm border-l-4 pipeline-stage cursor-pointer" 
+                                     style="border-left-color: ${status.color}" 
+                                     onclick="leadsManager.viewLeadDetails(${lead.id})">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <h4 class="font-medium text-gray-900 text-sm">${lead.first_name} ${lead.last_name}</h4>
+                                        <span class="temperature-${lead.temperature} text-white text-xs px-2 py-1 rounded-full">
+                                            ${lead.temperature}
+                                        </span>
+                                    </div>
+                                    <p class="text-sm text-gray-600">${lead.company}</p>
+                                    <div class="flex items-center justify-between mt-2">
+                                        <span class="text-xs text-gray-500">Score: ${lead.lead_score}</span>
+                                        <span class="text-xs text-gray-500">${lead.days_old}d old</span>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                    pipelineColumns.appendChild(column);
+                });
+            }
+
+            renderAnalyticsView() {
+                // Render charts when analytics view is shown
+                setTimeout(() => {
+                    this.renderCharts();
+                }, 100);
+            }
+
+            renderCharts() {
+                // Conversion Funnel Chart
+                const funnelCtx = document.getElementById('funnelChart').getContext('2d');
+                new Chart(funnelCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: this.analytics.conversion_funnel?.map(stage => stage.stage) || [],
+                        datasets: [{
+                            label: 'Leads',
+                            data: this.analytics.conversion_funnel?.map(stage => stage.count) || [],
+                            backgroundColor: '#3B82F6'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: { legend: { display: false } }
+                    }
+                });
+
+                // Source Distribution Chart
+                const sourceCtx = document.getElementById('sourceChart').getContext('2d');
+                new Chart(sourceCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: this.analytics.by_source?.map(source => source.name) || [],
+                        datasets: [{
+                            data: this.analytics.by_source?.map(source => source.count) || [],
+                            backgroundColor: ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6']
+                        }]
+                    },
+                    options: { responsive: true }
+                });
+            }
+
+            async createLead() {
+                const form = document.getElementById('createLeadForm');
+                const formData = new FormData(form);
+                const leadData = Object.fromEntries(formData);
+
+                try {
+                    const response = await fetch('/api/leads?action=create', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(leadData)
+                    });
+
+                    if (response.ok) {
+                        this.hideCreateLeadModal();
+                        this.loadData();
+                        this.showNotification('Lead created successfully', 'success');
+                    }
+                } catch (error) {
+                    console.error('Error creating lead:', error);
+                    this.showNotification('Error creating lead', 'error');
+                }
+            }
+
+            async viewLeadDetails(leadId) {
+                // Implementation for viewing lead details
+                document.getElementById('leadDetailsModal').classList.remove('hidden');
+                document.getElementById('leadDetailsModal').classList.add('flex');
+            }
+
+            filterLeads() {
+                // Implementation for filtering leads
+                this.renderCurrentView();
+            }
+
+            showCreateLeadModal() {
+                document.getElementById('createLeadModal').classList.remove('hidden');
+                document.getElementById('createLeadModal').classList.add('flex');
+            }
+
+            hideCreateLeadModal() {
+                document.getElementById('createLeadModal').classList.add('hidden');
+                document.getElementById('createLeadModal').classList.remove('flex');
+                document.getElementById('createLeadForm').reset();
+            }
+
+            hideLeadDetailsModal() {
+                document.getElementById('leadDetailsModal').classList.add('hidden');
+                document.getElementById('leadDetailsModal').classList.remove('flex');
+            }
+
+            showNotification(message, type) {
+                // Implementation for showing notifications
+                console.log(`${type}: ${message}`);
+            }
+        }
+
+        // Global functions
+        function switchView(view) { leadsManager.switchView(view); }
+        function showCreateLeadModal() { leadsManager.showCreateLeadModal(); }
+        function hideCreateLeadModal() { leadsManager.hideCreateLeadModal(); }
+        function hideLeadDetailsModal() { leadsManager.hideLeadDetailsModal(); }
+        function showImportModal() { console.log('Import modal not implemented yet'); }
+
+        // Initialize leads manager
+        const leadsManager = new LeadsManager();
+    </script>
+</body>
+</html> 

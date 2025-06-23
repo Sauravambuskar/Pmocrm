@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Projects - Enterprise CRM</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        .project-card {
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+        }
+        .project-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        .project-card.border-l-green-500 { border-left-color: #10B981; }
+        .project-card.border-l-yellow-500 { border-left-color: #F59E0B; }
+        .project-card.border-l-orange-500 { border-left-color: #F97316; }
+        .project-card.border-l-red-500 { border-left-color: #EF4444; }
+        
+        .progress-bar {
+            background: #E5E7EB;
+            border-radius: 9999px;
+            height: 8px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            background: linear-gradient(90deg, #4F46E5, #7C3AED);
+            height: 100%;
+            border-radius: 9999px;
+            transition: width 0.5s ease;
+        }
+        
+        .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #4F46E5;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            margin-right: -8px;
+            border: 2px solid white;
+        }
+        
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-size: 12px;
+            font-weight: 500;
+            text-transform: capitalize;
+        }
+        .status-active { background: #DCFCE7; color: #166534; }
+        .status-planning { background: #FEF3C7; color: #92400E; }
+        .status-on-hold { background: #FEE2E2; color: #991B1B; }
+        .status-completed { background: #DBEAFE; color: #1E40AF; }
+        
+        .priority-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .priority-low { background: #DCFCE7; color: #166534; }
+        .priority-medium { background: #FEF3C7; color: #92400E; }
+        .priority-high { background: #FED7AA; color: #C2410C; }
+        .priority-critical { background: #FEE2E2; color: #991B1B; }
+        
+        .filter-dropdown {
+            position: relative;
+        }
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border: 1px solid #E5E7EB;
+            border-radius: 8px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            z-index: 50;
+            min-width: 200px;
+            display: none;
+        }
+        .dropdown-menu.show { display: block; }
+        .dropdown-item {
+            padding: 8px 16px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .dropdown-item:hover { background: #F3F4F6; }
+        
+        .view-toggle {
+            display: flex;
+            background: #F3F4F6;
+            border-radius: 8px;
+            padding: 4px;
+        }
+        .view-btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .view-btn.active {
+            background: white;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .search-input {
+            background: #F9FAFB;
+            border: 1px solid #E5E7EB;
+            border-radius: 8px;
+            padding: 12px 16px 12px 40px;
+            width: 100%;
+            max-width: 400px;
+        }
+        .search-container {
+            position: relative;
+        }
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9CA3AF;
+        }
+        
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 24px;
+            margin-top: 24px;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: all 0.2s;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-sm { padding: 6px 12px; font-size: 14px; }
+        .btn-primary { background: #4F46E5; color: white; }
+        .btn-primary:hover { background: #4338CA; }
+        .btn-secondary { background: #F3F4F6; color: #374151; }
+        .btn-secondary:hover { background: #E5E7EB; }
+        .btn-success { background: #10B981; color: white; }
+        .btn-success:hover { background: #059669; }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 16px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            z-index: 9999;
+            animation: slideIn 0.3s ease;
+        }
+        .notification-success { background: #10B981; }
+        .notification-error { background: #EF4444; }
+        .notification-warning { background: #F59E0B; }
+        .notification-info { background: #3B82F6; }
+        
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .modal-header {
+            padding: 24px;
+            border-bottom: 1px solid #E5E7EB;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .modal-body {
+            padding: 24px;
+        }
+        .modal-footer {
+            padding: 24px;
+            border-top: 1px solid #E5E7EB;
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #374151;
+        }
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #E5E7EB;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: #4F46E5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        .form-select {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 8px center;
+            background-repeat: no-repeat;
+            background-size: 16px;
+            padding-right: 40px;
+        }
+        
+        .team-member {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            border: 1px solid #E5E7EB;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+        .team-member:last-child {
+            margin-bottom: 0;
+        }
+        
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+        .stat-card {
+            background: white;
+            border: 1px solid #E5E7EB;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1F2937;
+            margin-bottom: 8px;
+        }
+        .stat-label {
+            color: #6B7280;
+            font-size: 14px;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-200 px-6 py-4">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+                <h1 class="text-2xl font-bold text-gray-900">Projects</h1>
+                <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">Enterprise</span>
+            </div>
+            
+            <div class="flex items-center space-x-4">
+                <div class="search-container">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" class="search-input" placeholder="Search projects..." id="project-search">
+                </div>
+                
+                <div class="view-toggle">
+                    <button class="view-btn active" data-view="grid">
+                        <i class="fas fa-th-large"></i>
+                    </button>
+                    <button class="view-btn" data-view="list">
+                        <i class="fas fa-list"></i>
+                    </button>
+                    <button class="view-btn" data-view="kanban">
+                        <i class="fas fa-columns"></i>
+                    </button>
+                </div>
+                
+                <div class="filter-dropdown">
+                    <button class="btn btn-secondary" id="filter-btn">
+                        <i class="fas fa-filter"></i>
+                        Filters
+                    </button>
+                    <div class="dropdown-menu" id="filter-menu">
+                        <div class="dropdown-item" data-filter="status" data-value="all">All Status</div>
+                        <div class="dropdown-item" data-filter="status" data-value="active">Active</div>
+                        <div class="dropdown-item" data-filter="status" data-value="planning">Planning</div>
+                        <div class="dropdown-item" data-filter="status" data-value="completed">Completed</div>
+                        <hr class="my-2">
+                        <div class="dropdown-item" data-filter="priority" data-value="all">All Priorities</div>
+                        <div class="dropdown-item" data-filter="priority" data-value="critical">Critical</div>
+                        <div class="dropdown-item" data-filter="priority" data-value="high">High</div>
+                        <div class="dropdown-item" data-filter="priority" data-value="medium">Medium</div>
+                        <div class="dropdown-item" data-filter="priority" data-value="low">Low</div>
+                    </div>
+                </div>
+                
+                <button class="btn btn-primary" onclick="openNewProjectModal()">
+                    <i class="fas fa-plus"></i>
+                    New Project
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Stats Row -->
+    <div class="px-6 py-6">
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-value" id="total-projects">24</div>
+                <div class="stat-label">Total Projects</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="active-projects">12</div>
+                <div class="stat-label">Active Projects</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="completed-projects">8</div>
+                <div class="stat-label">Completed</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="total-budget">$2.4M</div>
+                <div class="stat-label">Total Budget</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Projects Container -->
+    <div class="px-6 pb-6">
+        <div id="projects-container" class="projects-grid">
+            <!-- Projects will be loaded here -->
+        </div>
+    </div>
+
+    <!-- New Project Modal -->
+    <div id="new-project-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="text-xl font-semibold">Create New Project</h2>
+                <button onclick="closeModal('new-project-modal')" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="new-project-form">
+                    <div class="grid grid-cols-2 gap-6">
+                        <div class="form-group">
+                            <label class="form-label">Project Name *</label>
+                            <input type="text" class="form-input" name="name" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Project Code</label>
+                            <input type="text" class="form-input" name="code" placeholder="AUTO-GENERATED">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Client/Company</label>
+                            <select class="form-input form-select" name="company_id">
+                                <option value="">Select Company</option>
+                                <option value="1">TechCorp Inc</option>
+                                <option value="2">StartupXYZ</option>
+                                <option value="3">Enterprise Solutions</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Project Manager</label>
+                            <select class="form-input form-select" name="project_manager_id">
+                                <option value="">Select Manager</option>
+                                <option value="1">John Doe</option>
+                                <option value="2">Jane Smith</option>
+                                <option value="3">Mike Johnson</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Start Date</label>
+                            <input type="date" class="form-input" name="start_date">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">End Date</label>
+                            <input type="date" class="form-input" name="end_date">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Budget</label>
+                            <input type="number" class="form-input" name="budget" placeholder="0.00">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Priority</label>
+                            <select class="form-input form-select" name="priority">
+                                <option value="low">Low</option>
+                                <option value="medium" selected>Medium</option>
+                                <option value="high">High</option>
+                                <option value="critical">Critical</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-input form-textarea" name="description" rows="4"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Project Type</label>
+                        <select class="form-input form-select" name="type">
+                            <option value="client">Client Project</option>
+                            <option value="internal">Internal Project</option>
+                            <option value="maintenance">Maintenance</option>
+                            <option value="research">Research & Development</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Methodology</label>
+                        <select class="form-input form-select" name="methodology">
+                            <option value="agile">Agile</option>
+                            <option value="waterfall">Waterfall</option>
+                            <option value="hybrid">Hybrid</option>
+                            <option value="kanban">Kanban</option>
+                            <option value="scrum">Scrum</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('new-project-modal')">
+                    Cancel
+                </button>
+                <button type="submit" form="new-project-form" class="btn btn-primary">
+                    <i class="fas fa-plus"></i>
+                    Create Project
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Project Details Modal -->
+    <div id="project-details-modal" class="modal">
+        <div class="modal-content" style="max-width: 1200px;">
+            <div class="modal-header">
+                <h2 class="text-xl font-semibold" id="project-details-title">Project Details</h2>
+                <button onclick="closeModal('project-details-modal')" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="project-details-content">
+                <!-- Project details will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Container -->
+    <div id="notification-container"></div>
+
+    <!-- Scripts -->
+    <script src="js/enterprise-app.js"></script>
+    <script>
+        // Project management functionality
+        let currentFilters = { status: 'all', priority: 'all' };
+        let currentView = 'grid';
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.projectManager) {
+                window.projectManager.loadProjects();
+            }
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            // Filter dropdown
+            document.getElementById('filter-btn').addEventListener('click', function() {
+                const menu = document.getElementById('filter-menu');
+                menu.classList.toggle('show');
+            });
+
+            // Filter items
+            document.querySelectorAll('[data-filter]').forEach(item => {
+                item.addEventListener('click', function() {
+                    const filter = this.dataset.filter;
+                    const value = this.dataset.value;
+                    currentFilters[filter] = value;
+                    loadProjects();
+                    document.getElementById('filter-menu').classList.remove('show');
+                });
+            });
+
+            // View toggle
+            document.querySelectorAll('[data-view]').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    currentView = this.dataset.view;
+                    loadProjects();
+                });
+            });
+
+            // Search
+            document.getElementById('project-search').addEventListener('input', function() {
+                const query = this.value.toLowerCase();
+                filterProjectsInView(query);
+            });
+
+            // New project form
+            document.getElementById('new-project-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                createNewProject();
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.filter-dropdown')) {
+                    document.getElementById('filter-menu').classList.remove('show');
+                }
+            });
+        }
+
+        async function loadProjects() {
+            try {
+                const response = await apiRequest('/projects');
+                if (response && response.projects) {
+                    displayProjects(response.projects);
+                    updateStats(response.projects);
+                } else {
+                    // Load mock data
+                    const mockProjects = getMockProjects();
+                    displayProjects(mockProjects);
+                    updateStats(mockProjects);
+                }
+            } catch (error) {
+                console.error('Error loading projects:', error);
+                showNotification('Failed to load projects', 'error');
+                
+                // Load mock data as fallback
+                const mockProjects = getMockProjects();
+                displayProjects(mockProjects);
+                updateStats(mockProjects);
+            }
+        }
+
+        function getMockProjects() {
+            return [
+                {
+                    id: 1,
+                    name: 'Enterprise CRM System',
+                    description: 'Complete enterprise-level CRM solution with advanced features including project management, contact tracking, and analytics.',
+                    status: 'active',
+                    priority: 'high',
+                    calculated_progress: 75,
+                    budget: 150000,
+                    start_date: '2024-01-15',
+                    end_date: '2024-06-15',
+                    client_name: 'TechCorp Inc',
+                    manager_first_name: 'John',
+                    manager_last_name: 'Doe',
+                    team: [
+                        { first_name: 'Jane', last_name: 'Smith' },
+                        { first_name: 'Mike', last_name: 'Johnson' },
+                        { first_name: 'Sarah', last_name: 'Wilson' }
+                    ],
+                    type: 'client',
+                    methodology: 'agile'
+                },
+                {
+                    id: 2,
+                    name: 'Mobile App Development',
+                    description: 'Cross-platform mobile application for iOS and Android with real-time synchronization.',
+                    status: 'planning',
+                    priority: 'medium',
+                    calculated_progress: 25,
+                    budget: 75000,
+                    start_date: '2024-02-01',
+                    end_date: '2024-08-01',
+                    client_name: 'StartupXYZ',
+                    manager_first_name: 'Sarah',
+                    manager_last_name: 'Wilson',
+                    team: [
+                        { first_name: 'Alex', last_name: 'Brown' },
+                        { first_name: 'Emma', last_name: 'Davis' }
+                    ],
+                    type: 'client',
+                    methodology: 'scrum'
+                },
+                {
+                    id: 3,
+                    name: 'Data Analytics Platform',
+                    description: 'Advanced analytics and reporting platform with machine learning capabilities.',
+                    status: 'active',
+                    priority: 'critical',
+                    calculated_progress: 60,
+                    budget: 200000,
+                    start_date: '2023-11-01',
+                    end_date: '2024-05-01',
+                    client_name: 'Enterprise Solutions',
+                    manager_first_name: 'Mike',
+                    manager_last_name: 'Johnson',
+                    team: [
+                        { first_name: 'David', last_name: 'Lee' },
+                        { first_name: 'Lisa', last_name: 'Chen' },
+                        { first_name: 'Tom', last_name: 'Anderson' }
+                    ],
+                    type: 'client',
+                    methodology: 'waterfall'
+                },
+                {
+                    id: 4,
+                    name: 'Internal Tool Upgrade',
+                    description: 'Modernizing internal development tools and processes.',
+                    status: 'completed',
+                    priority: 'low',
+                    calculated_progress: 100,
+                    budget: 30000,
+                    start_date: '2023-10-01',
+                    end_date: '2024-01-01',
+                    client_name: null,
+                    manager_first_name: 'Jane',
+                    manager_last_name: 'Smith',
+                    team: [
+                        { first_name: 'Chris', last_name: 'Taylor' }
+                    ],
+                    type: 'internal',
+                    methodology: 'kanban'
+                }
+            ];
+        }
+
+        function displayProjects(projects) {
+            const container = document.getElementById('projects-container');
+            
+            // Apply filters
+            let filteredProjects = projects;
+            if (currentFilters.status !== 'all') {
+                filteredProjects = filteredProjects.filter(p => p.status === currentFilters.status);
+            }
+            if (currentFilters.priority !== 'all') {
+                filteredProjects = filteredProjects.filter(p => p.priority === currentFilters.priority);
+            }
+
+            if (currentView === 'grid') {
+                container.className = 'projects-grid';
+                container.innerHTML = filteredProjects.map(project => `
+                    <div class="project-card bg-white rounded-lg border border-gray-200 p-6 ${getPriorityClass(project.priority)}" data-project-id="${project.id}">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="flex-1">
+                                <h3 class="text-lg font-semibold text-gray-900 mb-2">${project.name}</h3>
+                                <p class="text-gray-600 text-sm line-clamp-2">${project.description}</p>
+                            </div>
+                            <div class="flex flex-col items-end gap-2">
+                                <span class="status-badge status-${project.status}">${project.status}</span>
+                                <span class="priority-badge priority-${project.priority}">${project.priority}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm text-gray-600">Progress</span>
+                                <span class="text-sm font-medium text-gray-900">${project.calculated_progress}%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: ${project.calculated_progress}%"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4 mb-4 text-sm">
+                            <div class="flex items-center text-gray-600">
+                                <i class="fas fa-dollar-sign mr-2"></i>
+                                ${project.budget ? '$' + project.budget.toLocaleString() : 'N/A'}
+                            </div>
+                            <div class="flex items-center text-gray-600">
+                                <i class="fas fa-calendar mr-2"></i>
+                                ${formatDate(project.end_date)}
+                            </div>
+                            <div class="flex items-center text-gray-600">
+                                <i class="fas fa-building mr-2"></i>
+                                ${project.client_name || 'Internal'}
+                            </div>
+                            <div class="flex items-center text-gray-600">
+                                <i class="fas fa-user-tie mr-2"></i>
+                                ${project.manager_first_name} ${project.manager_last_name}
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <div class="flex -space-x-2 mr-3">
+                                    ${renderTeamAvatars(project.team)}
+                                </div>
+                                <span class="text-sm text-gray-600">${project.team?.length || 0} members</span>
+                            </div>
+                            <div class="flex gap-2">
+                                <button class="btn btn-sm btn-primary" onclick="viewProjectDetails(${project.id})">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-sm btn-secondary" onclick="editProject(${project.id})">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function renderTeamAvatars(team) {
+            if (!team || team.length === 0) return '<div class="avatar bg-gray-300">?</div>';
+            
+            return team.slice(0, 3).map(member => `
+                <div class="avatar" title="${member.first_name} ${member.last_name}">
+                    ${member.first_name[0]}${member.last_name[0]}
+                </div>
+            `).join('') + (team.length > 3 ? `<div class="avatar bg-gray-400">+${team.length - 3}</div>` : '');
+        }
+
+        function getPriorityClass(priority) {
+            const classes = {
+                'low': 'border-l-green-500',
+                'medium': 'border-l-yellow-500',
+                'high': 'border-l-orange-500',
+                'critical': 'border-l-red-500'
+            };
+            return classes[priority] || classes.medium;
+        }
+
+        function updateStats(projects) {
+            const stats = {
+                total: projects.length,
+                active: projects.filter(p => p.status === 'active').length,
+                completed: projects.filter(p => p.status === 'completed').length,
+                totalBudget: projects.reduce((sum, p) => sum + (p.budget || 0), 0)
+            };
+
+            document.getElementById('total-projects').textContent = stats.total;
+            document.getElementById('active-projects').textContent = stats.active;
+            document.getElementById('completed-projects').textContent = stats.completed;
+            document.getElementById('total-budget').textContent = '$' + (stats.totalBudget / 1000000).toFixed(1) + 'M';
+        }
+
+        function filterProjectsInView(query) {
+            const projectCards = document.querySelectorAll('.project-card');
+            projectCards.forEach(card => {
+                const text = card.textContent.toLowerCase();
+                card.style.display = text.includes(query) ? 'block' : 'none';
+            });
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            return new Date(dateString).toLocaleDateString();
+        }
+
+        function openNewProjectModal() {
+            document.getElementById('new-project-modal').style.display = 'flex';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        async function createNewProject() {
+            const form = document.getElementById('new-project-form');
+            const formData = new FormData(form);
+            const projectData = Object.fromEntries(formData.entries());
+
+            try {
+                const response = await apiRequest('/projects', {
+                    method: 'POST',
+                    body: JSON.stringify(projectData)
+                });
+
+                if (response && response.success) {
+                    showNotification('Project created successfully!', 'success');
+                    closeModal('new-project-modal');
+                    form.reset();
+                    loadProjects();
+                } else {
+                    showNotification('Failed to create project', 'error');
+                }
+            } catch (error) {
+                console.error('Error creating project:', error);
+                showNotification('Error creating project', 'error');
+            }
+        }
+
+        function viewProjectDetails(projectId) {
+            // Mock project details for demo
+            const mockDetails = `
+                <div class="grid grid-cols-3 gap-6">
+                    <div class="col-span-2">
+                        <h3 class="text-lg font-semibold mb-4">Project Overview</h3>
+                        <div class="bg-gray-50 p-4 rounded-lg mb-6">
+                            <p class="text-gray-700">This is a comprehensive enterprise CRM system designed to streamline business processes and improve customer relationship management.</p>
+                        </div>
+                        
+                        <h4 class="font-semibold mb-3">Recent Activities</h4>
+                        <div class="space-y-3">
+                            <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                                <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                                    <i class="fas fa-check text-green-600 text-sm"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium">Task completed: Database schema design</p>
+                                    <p class="text-xs text-gray-500">2 hours ago</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                                <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                                    <i class="fas fa-plus text-blue-600 text-sm"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium">New task created: API development</p>
+                                    <p class="text-xs text-gray-500">5 hours ago</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h3 class="text-lg font-semibold mb-4">Project Details</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="text-sm font-medium text-gray-600">Status</label>
+                                <p class="text-sm">Active</p>
+                            </div>
+                            <div>
+                                <label class="text-sm font-medium text-gray-600">Priority</label>
+                                <p class="text-sm">High</p>
+                            </div>
+                            <div>
+                                <label class="text-sm font-medium text-gray-600">Budget</label>
+                                <p class="text-sm">$150,000</p>
+                            </div>
+                            <div>
+                                <label class="text-sm font-medium text-gray-600">Timeline</label>
+                                <p class="text-sm">Jan 15 - Jun 15, 2024</p>
+                            </div>
+                        </div>
+                        
+                        <h4 class="font-semibold mt-6 mb-3">Team Members</h4>
+                        <div class="space-y-2">
+                            <div class="team-member">
+                                <div class="avatar">JD</div>
+                                <div>
+                                    <p class="text-sm font-medium">John Doe</p>
+                                    <p class="text-xs text-gray-500">Project Manager</p>
+                                </div>
+                            </div>
+                            <div class="team-member">
+                                <div class="avatar">JS</div>
+                                <div>
+                                    <p class="text-sm font-medium">Jane Smith</p>
+                                    <p class="text-xs text-gray-500">Developer</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('project-details-title').textContent = `Project #${projectId} Details`;
+            document.getElementById('project-details-content').innerHTML = mockDetails;
+            document.getElementById('project-details-modal').style.display = 'flex';
+        }
+
+        function editProject(projectId) {
+            showNotification('Edit project functionality coming soon!', 'info');
+        }
+
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+            notification.textContent = message;
+            
+            document.getElementById('notification-container').appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 5000);
+        }
+
+        // Make functions globally available
+        window.viewProjectDetails = viewProjectDetails;
+        window.editProject = editProject;
+        window.openNewProjectModal = openNewProjectModal;
+        window.closeModal = closeModal;
+    </script>
+</body>
+</html> 

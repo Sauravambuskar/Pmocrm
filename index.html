@@ -23,11 +23,147 @@
         .smooth-transition { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         .glass-effect { backdrop-filter: blur(16px); background: rgba(255, 255, 255, 0.1); }
         .card-hover:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
-        .task-card { cursor: grab; }
+        .task-card { 
+            cursor: grab; 
+            transition: all 0.3s ease;
+        }
         .task-card:active { cursor: grabbing; }
+        .task-card:hover { 
+            transform: translateY(-2px); 
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15); 
+        }
         .task-column { min-height: 400px; }
         .calendar-day { min-height: 100px; }
         .modal-overlay { backdrop-filter: blur(4px); }
+        
+        /* Enhanced Project Detail Modal Styles */
+        .project-tab.active {
+            border-color: #3b82f6 !important;
+            color: #3b82f6 !important;
+        }
+        
+        .project-tab-content {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Kanban Board Enhancements */
+        .kanban-column {
+            transition: all 0.3s ease;
+        }
+        
+        .kanban-column:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .task-card {
+            transition: all 0.2s ease;
+            border-left: 4px solid transparent;
+        }
+        
+        .task-card:hover {
+            border-left-color: #3b82f6;
+        }
+        
+        /* Priority color indicators */
+        .priority-critical { border-left-color: #ef4444 !important; }
+        .priority-high { border-left-color: #f97316 !important; }
+        .priority-medium { border-left-color: #eab308 !important; }
+        .priority-low { border-left-color: #22c55e !important; }
+        
+        /* Drag and drop visual feedback */
+        .drag-over {
+            background-color: rgba(59, 130, 246, 0.1) !important;
+            border: 2px dashed #3b82f6 !important;
+        }
+        
+        .dragging {
+            opacity: 0.5;
+            transform: rotate(5deg);
+        }
+        
+        /* Line clamp utility */
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        /* Scrollbar styling */
+        .overflow-y-auto::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .overflow-y-auto::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 3px;
+        }
+        
+        .overflow-y-auto::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+        
+        .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        
+        /* Progress bar animations */
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+        }
+        
+        /* Team member avatar improvements */
+        .team-avatar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 600;
+        }
+        
+        /* Activity timeline improvements */
+        .activity-item {
+            position: relative;
+            padding-left: 2rem;
+        }
+        
+        .activity-item::before {
+            content: '';
+            position: absolute;
+            left: 0.75rem;
+            top: 2rem;
+            height: calc(100% - 1rem);
+            width: 2px;
+            background: #e2e8f0;
+        }
+        
+        .activity-item:last-child::before {
+            display: none;
+        }
+        
+        /* Modal responsiveness improvements */
+        @media (max-height: 800px) {
+            .max-h-\[95vh\] {
+                max-height: 90vh;
+            }
+        }
+        
+        @media (max-width: 1024px) {
+            .max-w-6xl {
+                max-width: 95vw;
+            }
+        }
+        
+        /* Compact form on smaller screens */
+        @media (max-width: 768px) {
+            .lg\:grid-cols-2 {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body class="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 min-h-screen">
@@ -227,26 +363,268 @@
 
             <!-- Projects Section -->
             <div id="projects-section" class="section hidden">
-                <div class="bg-white rounded-2xl shadow-lg">
-                    <div class="p-6 border-b border-gray-200 flex justify-between items-center">
-                        <h3 class="text-lg font-semibold text-gray-800">Project Management</h3>
-                        <button onclick="openProjectModal()" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 smooth-transition">
-                            <i class="fas fa-plus mr-2"></i>New Project
-                        </button>
+                <!-- Project Dashboard Overview -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+                    <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl p-6 text-white">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-blue-100 text-sm">Total Projects</p>
+                                <p class="text-3xl font-bold" id="total-projects-count">0</p>
+                                <p class="text-blue-100 text-sm">All time</p>
+                            </div>
+                            <i class="fas fa-project-diagram text-3xl text-blue-200"></i>
+                        </div>
                     </div>
+                    <div class="bg-gradient-to-r from-green-500 to-green-600 rounded-2xl p-6 text-white">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-green-100 text-sm">Active Projects</p>
+                                <p class="text-3xl font-bold" id="active-projects-count">0</p>
+                                <p class="text-green-100 text-sm">In progress</p>
+                            </div>
+                            <i class="fas fa-play-circle text-3xl text-green-200"></i>
+                        </div>
+                    </div>
+                    <div class="bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-2xl p-6 text-white">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-yellow-100 text-sm">Budget Utilization</p>
+                                <p class="text-3xl font-bold" id="budget-utilization">0%</p>
+                                <p class="text-yellow-100 text-sm">Overall</p>
+                            </div>
+                            <i class="fas fa-chart-pie text-3xl text-yellow-200"></i>
+                        </div>
+                    </div>
+                    <div class="bg-gradient-to-r from-purple-500 to-purple-600 rounded-2xl p-6 text-white">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-purple-100 text-sm">Team Efficiency</p>
+                                <p class="text-3xl font-bold" id="team-efficiency">0%</p>
+                                <p class="text-purple-100 text-sm">This month</p>
+                            </div>
+                            <i class="fas fa-users text-3xl text-purple-200"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Advanced Filters and Controls -->
+                <div class="bg-white rounded-2xl shadow-lg mb-6">
+                    <div class="p-6 border-b border-gray-200">
+                        <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-800">Project Portfolio Management</h3>
+                                <p class="text-sm text-gray-600">Comprehensive project oversight and control</p>
+                            </div>
+                            <div class="flex flex-wrap gap-2">
+                                <button onclick="openProjectModal()" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 smooth-transition">
+                                    <i class="fas fa-plus mr-2"></i>New Project
+                                </button>
+                                <button onclick="openProjectTemplateModal()" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 smooth-transition">
+                                    <i class="fas fa-template mr-2"></i>Templates
+                                </button>
+                                <button onclick="exportProjects()" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 smooth-transition">
+                                    <i class="fas fa-download mr-2"></i>Export
+                                </button>
+                                <button onclick="openBulkActionsModal()" class="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 smooth-transition">
+                                    <i class="fas fa-tasks mr-2"></i>Bulk Actions
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Advanced Filtering System -->
                     <div class="p-6">
-                        <div class="mb-4 flex flex-col sm:flex-row gap-4">
-                            <input type="text" id="project-search" placeholder="Search projects..." onkeyup="searchProjects()" class="flex-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4 mb-6">
+                            <input type="text" id="project-search" placeholder="Search projects..." onkeyup="searchProjects()" class="p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                            
                             <select id="project-status-filter" onchange="filterProjects()" class="p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
                                 <option value="">All Status</option>
                                 <option value="planning">Planning</option>
                                 <option value="active">Active</option>
                                 <option value="completed">Completed</option>
                                 <option value="on-hold">On Hold</option>
+                                <option value="cancelled">Cancelled</option>
                             </select>
+                            
+                            <select id="project-priority-filter" onchange="filterProjects()" class="p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                                <option value="">All Priorities</option>
+                                <option value="critical">Critical</option>
+                                <option value="high">High</option>
+                                <option value="medium">Medium</option>
+                                <option value="low">Low</option>
+                            </select>
+                            
+                            <select id="project-manager-filter" onchange="filterProjects()" class="p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                                <option value="">All Managers</option>
+                                <option value="john-doe">John Doe</option>
+                                <option value="jane-smith">Jane Smith</option>
+                                <option value="mike-johnson">Mike Johnson</option>
+                            </select>
+                            
+                            <input type="date" id="project-date-from" onchange="filterProjects()" placeholder="From Date" class="p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                            
+                            <input type="date" id="project-date-to" onchange="filterProjects()" placeholder="To Date" class="p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
                         </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="projects-grid">
-                            <!-- Projects will be loaded here -->
+                        
+                        <!-- View Toggle -->
+                        <div class="flex justify-between items-center mb-4">
+                            <div class="flex items-center gap-2">
+                                <span class="text-sm text-gray-600">View:</span>
+                                <div class="bg-gray-100 rounded-lg p-1 flex">
+                                    <button onclick="setProjectView('grid')" id="grid-view-btn" class="px-3 py-1 rounded bg-primary text-white text-sm">
+                                        <i class="fas fa-th mr-1"></i>Grid
+                                    </button>
+                                    <button onclick="setProjectView('list')" id="list-view-btn" class="px-3 py-1 rounded text-gray-600 text-sm hover:bg-gray-200">
+                                        <i class="fas fa-list mr-1"></i>List
+                                    </button>
+                                    <button onclick="setProjectView('kanban')" id="kanban-view-btn" class="px-3 py-1 rounded text-gray-600 text-sm hover:bg-gray-200">
+                                        <i class="fas fa-columns mr-1"></i>Kanban
+                                    </button>
+                                    <button onclick="setProjectView('timeline')" id="timeline-view-btn" class="px-3 py-1 rounded text-gray-600 text-sm hover:bg-gray-200">
+                                        <i class="fas fa-calendar-alt mr-1"></i>Timeline
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <span class="text-sm text-gray-600" id="projects-count-display">0 projects</span>
+                                <select id="projects-per-page" onchange="changeProjectsPerPage()" class="text-sm border border-gray-300 rounded px-2 py-1">
+                                    <option value="12">12 per page</option>
+                                    <option value="24">24 per page</option>
+                                    <option value="48">48 per page</option>
+                                    <option value="all">Show all</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- Project Views Container -->
+                        <div id="projects-container">
+                            <!-- Grid View -->
+                            <div id="projects-grid-view" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                <!-- Projects will be loaded here -->
+                            </div>
+                            
+                            <!-- List View -->
+                            <div id="projects-list-view" class="hidden">
+                                <div class="overflow-x-auto">
+                                    <table class="w-full">
+                                        <thead class="bg-gray-50">
+                                            <tr>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    <input type="checkbox" id="select-all-projects" onchange="toggleAllProjects()">
+                                                </th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="sortProjects('name')">
+                                                    Project Name <i class="fas fa-sort ml-1"></i>
+                                                </th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="sortProjects('status')">
+                                                    Status <i class="fas fa-sort ml-1"></i>
+                                                </th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="sortProjects('priority')">
+                                                    Priority <i class="fas fa-sort ml-1"></i>
+                                                </th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="sortProjects('progress')">
+                                                    Progress <i class="fas fa-sort ml-1"></i>
+                                                </th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="sortProjects('budget')">
+                                                    Budget <i class="fas fa-sort ml-1"></i>
+                                                </th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer" onclick="sortProjects('due_date')">
+                                                    Due Date <i class="fas fa-sort ml-1"></i>
+                                                </th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="projects-table-body" class="bg-white divide-y divide-gray-200">
+                                            <!-- Table rows will be loaded here -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            
+                            <!-- Kanban View -->
+                            <div id="projects-kanban-view" class="hidden">
+                                <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                                    <div class="bg-gray-50 rounded-lg p-4 kanban-column">
+                                        <h4 class="font-semibold text-gray-800 mb-4 flex items-center">
+                                            <span class="w-3 h-3 bg-gray-500 rounded-full mr-2"></span>Planning
+                                            <span class="ml-auto bg-gray-200 text-gray-700 px-2 py-1 rounded-full text-sm" id="planning-count">0</span>
+                                        </h4>
+                                        <div id="planning-projects" class="space-y-3 min-h-96 overflow-y-auto" ondrop="dropProject(event, 'planning')" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
+                                            <!-- Planning projects -->
+                                        </div>
+                                    </div>
+                                    <div class="bg-blue-50 rounded-lg p-4 kanban-column">
+                                        <h4 class="font-semibold text-gray-800 mb-4 flex items-center">
+                                            <span class="w-3 h-3 bg-blue-500 rounded-full mr-2"></span>Active
+                                            <span class="ml-auto bg-blue-200 text-blue-700 px-2 py-1 rounded-full text-sm" id="active-count">0</span>
+                                        </h4>
+                                        <div id="active-projects" class="space-y-3 min-h-96 overflow-y-auto" ondrop="dropProject(event, 'active')" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
+                                            <!-- Active projects -->
+                                        </div>
+                                    </div>
+                                    <div class="bg-yellow-50 rounded-lg p-4">
+                                        <h4 class="font-semibold text-gray-800 mb-4 flex items-center">
+                                            <span class="w-3 h-3 bg-yellow-500 rounded-full mr-2"></span>On Hold
+                                            <span class="ml-auto bg-yellow-200 text-yellow-700 px-2 py-1 rounded-full text-sm" id="on-hold-count">0</span>
+                                        </h4>
+                                        <div id="on-hold-projects" class="space-y-3 min-h-96" ondrop="dropProject(event, 'on-hold')" ondragover="allowDrop(event)">
+                                            <!-- On hold projects -->
+                                        </div>
+                                    </div>
+                                    <div class="bg-green-50 rounded-lg p-4">
+                                        <h4 class="font-semibold text-gray-800 mb-4 flex items-center">
+                                            <span class="w-3 h-3 bg-green-500 rounded-full mr-2"></span>Completed
+                                            <span class="ml-auto bg-green-200 text-green-700 px-2 py-1 rounded-full text-sm" id="completed-count">0</span>
+                                        </h4>
+                                        <div id="completed-projects" class="space-y-3 min-h-96" ondrop="dropProject(event, 'completed')" ondragover="allowDrop(event)">
+                                            <!-- Completed projects -->
+                                        </div>
+                                    </div>
+                                    <div class="bg-red-50 rounded-lg p-4">
+                                        <h4 class="font-semibold text-gray-800 mb-4 flex items-center">
+                                            <span class="w-3 h-3 bg-red-500 rounded-full mr-2"></span>Cancelled
+                                            <span class="ml-auto bg-red-200 text-red-700 px-2 py-1 rounded-full text-sm" id="cancelled-count">0</span>
+                                        </h4>
+                                        <div id="cancelled-projects" class="space-y-3 min-h-96" ondrop="dropProject(event, 'cancelled')" ondragover="allowDrop(event)">
+                                            <!-- Cancelled projects -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Timeline View -->
+                            <div id="projects-timeline-view" class="hidden">
+                                <div class="bg-white rounded-lg p-6">
+                                    <div class="flex justify-between items-center mb-6">
+                                        <h4 class="font-semibold text-gray-800">Project Timeline</h4>
+                                        <div class="flex gap-2">
+                                            <button onclick="changeTimelineView('month')" class="px-3 py-1 bg-primary text-white rounded text-sm">Month</button>
+                                            <button onclick="changeTimelineView('quarter')" class="px-3 py-1 bg-gray-200 text-gray-700 rounded text-sm">Quarter</button>
+                                            <button onclick="changeTimelineView('year')" class="px-3 py-1 bg-gray-200 text-gray-700 rounded text-sm">Year</button>
+                                        </div>
+                                    </div>
+                                    <div id="timeline-container" class="overflow-x-auto">
+                                        <!-- Timeline will be rendered here -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Pagination -->
+                        <div id="projects-pagination" class="flex justify-between items-center mt-6">
+                            <div class="text-sm text-gray-600">
+                                Showing <span id="showing-from">1</span> to <span id="showing-to">12</span> of <span id="total-projects">0</span> projects
+                            </div>
+                            <div class="flex gap-2">
+                                <button onclick="previousProjectPage()" class="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50" id="prev-page-btn">
+                                    <i class="fas fa-chevron-left"></i>
+                                </button>
+                                <div id="page-numbers" class="flex gap-1">
+                                    <!-- Page numbers will be generated here -->
+                                </div>
+                                <button onclick="nextProjectPage()" class="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50" id="next-page-btn">
+                                    <i class="fas fa-chevron-right"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -418,7 +796,7 @@
 
     <!-- Project Modal -->
     <div id="project-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center modal-overlay">
-        <div class="bg-white rounded-2xl p-6 w-full max-w-2xl mx-4 max-h-90vh overflow-y-auto">
+        <div class="bg-white rounded-2xl p-4 w-full max-w-6xl mx-4 max-h-[95vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-lg font-semibold" id="project-modal-title">Create New Project</h3>
                 <button onclick="closeModal('project-modal')" class="text-gray-500 hover:text-gray-700">
@@ -427,36 +805,150 @@
             </div>
             <form id="project-form" class="space-y-4">
                 <input type="hidden" id="project-id" name="id">
-                <input type="text" id="project-name" name="name" placeholder="Project Name" required class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
-                <textarea id="project-description" name="description" placeholder="Project Description" rows="3" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"></textarea>
-                <div class="grid grid-cols-2 gap-4">
-                    <select id="project-status" name="status" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
-                        <option value="planning">Planning</option>
-                        <option value="active">Active</option>
-                        <option value="on-hold">On Hold</option>
-                        <option value="completed">Completed</option>
-                    </select>
-                    <select id="project-priority" name="priority" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
-                        <option value="low">Low Priority</option>
-                        <option value="medium" selected>Medium Priority</option>
-                        <option value="high">High Priority</option>
-                    </select>
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm text-gray-600 mb-1">Start Date</label>
-                        <input type="date" id="project-start-date" name="start_date" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                
+                <!-- Compact Layout with 2 Columns -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Left Column -->
+                    <div class="space-y-4">
+                        <!-- Basic Information -->
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <h4 class="font-semibold text-gray-800 mb-3">Basic Information</h4>
+                            <div class="space-y-3">
+                                <input type="text" id="project-name" name="name" placeholder="Project Name" required class="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm">
+                                <input type="text" id="project-code" name="code" placeholder="Project Code (e.g., PRJ-2024-001)" class="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm">
+                                <textarea id="project-description" name="description" placeholder="Project Description" rows="2" class="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"></textarea>
+                            </div>
+                        </div>
+                        
+                        <!-- Classification & Status -->
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <h4 class="font-semibold text-gray-800 mb-3">Status & Priority</h4>
+                            <div class="grid grid-cols-2 gap-3">
+                                <select id="project-status" name="status" class="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm">
+                                    <option value="planning">Planning</option>
+                                    <option value="active">Active</option>
+                                    <option value="on-hold">On Hold</option>
+                                    <option value="completed">Completed</option>
+                                    <option value="cancelled">Cancelled</option>
+                                </select>
+                                <select id="project-priority" name="priority" class="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm">
+                                    <option value="critical">Critical</option>
+                                    <option value="high">High Priority</option>
+                                    <option value="medium" selected>Medium Priority</option>
+                                    <option value="low">Low Priority</option>
+                                </select>
+                                <select id="project-type" name="type" class="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm col-span-2">
+                                    <option value="internal">Internal</option>
+                                    <option value="client">Client Project</option>
+                                    <option value="research">Research & Development</option>
+                                    <option value="maintenance">Maintenance</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- Timeline & Budget -->
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <h4 class="font-semibold text-gray-800 mb-3">Timeline & Budget</h4>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs text-gray-600 mb-1">Start Date</label>
+                                    <input type="date" id="project-start-date" name="start_date" class="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-gray-600 mb-1">End Date</label>
+                                    <input type="date" id="project-end-date" name="end_date" class="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-gray-600 mb-1">Budget ($)</label>
+                                    <input type="number" id="project-budget" name="budget" placeholder="0.00" step="0.01" class="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-gray-600 mb-1">Estimated Hours</label>
+                                    <input type="number" id="project-hours" name="estimated_hours" placeholder="0" class="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm">
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div>
-                        <label class="block text-sm text-gray-600 mb-1">End Date</label>
-                        <input type="date" id="project-end-date" name="end_date" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                    
+                    <!-- Right Column -->
+                    <div class="space-y-4">
+                        <!-- Team & Client -->
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <h4 class="font-semibold text-gray-800 mb-3">Team & Client</h4>
+                            <div class="space-y-3">
+                                <select id="project-manager" name="manager" class="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm">
+                                    <option value="">Select Project Manager</option>
+                                    <option value="john-doe">John Doe</option>
+                                    <option value="jane-smith">Jane Smith</option>
+                                    <option value="mike-johnson">Mike Johnson</option>
+                                </select>
+                                <select id="project-client" name="client_id" class="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm">
+                                    <option value="">Select Client</option>
+                                    <option value="1">ABC Corporation</option>
+                                    <option value="2">XYZ Inc</option>
+                                    <option value="3">Tech Solutions Ltd</option>
+                                </select>
+                                <select id="project-department" name="department" class="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm">
+                                    <option value="">Select Department</option>
+                                    <option value="development">Development</option>
+                                    <option value="design">Design</option>
+                                    <option value="marketing">Marketing</option>
+                                    <option value="operations">Operations</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- Risk & Methodology -->
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <h4 class="font-semibold text-gray-800 mb-3">Risk & Methodology</h4>
+                            <div class="space-y-3">
+                                <select id="project-risk" name="risk_level" class="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm">
+                                    <option value="low">Low Risk</option>
+                                    <option value="medium" selected>Medium Risk</option>
+                                    <option value="high">High Risk</option>
+                                    <option value="critical">Critical Risk</option>
+                                </select>
+                                <select id="project-methodology" name="methodology" class="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm">
+                                    <option value="agile">Agile</option>
+                                    <option value="waterfall">Waterfall</option>
+                                    <option value="scrum">Scrum</option>
+                                    <option value="kanban">Kanban</option>
+                                    <option value="hybrid">Hybrid</option>
+                                </select>
+                                <input type="number" id="project-quality-score" name="quality_score" placeholder="Quality Score (1-10)" min="1" max="10" class="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm">
+                            </div>
+                        </div>
+                        
+                        <!-- Additional Settings -->
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <h4 class="font-semibold text-gray-800 mb-3">Additional Settings</h4>
+                            <div class="space-y-3">
+                                <input type="text" id="project-tags" name="tags" placeholder="Tags (comma separated)" class="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm">
+                                <select id="project-visibility" name="visibility" class="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm">
+                                    <option value="public">Public</option>
+                                    <option value="private">Private</option>
+                                    <option value="team">Team Only</option>
+                                    <option value="client">Client Visible</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <input type="number" id="project-budget" name="budget" placeholder="Budget ($)" step="0.01" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
-                <div class="flex gap-3">
-                    <button type="button" onclick="closeModal('project-modal')" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">Cancel</button>
-                    <button type="submit" class="flex-1 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90">
-                        <span id="project-submit-text">Save</span>
+                
+                <!-- Full Width Additional Information -->
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <h4 class="font-semibold text-gray-800 mb-3">Project Details</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <textarea id="project-objectives" name="objectives" placeholder="Project Objectives & Goals" rows="2" class="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"></textarea>
+                        <textarea id="project-deliverables" name="deliverables" placeholder="Key Deliverables" rows="2" class="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"></textarea>
+                        <textarea id="project-requirements" name="requirements" placeholder="Requirements & Specifications" rows="2" class="w-full p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"></textarea>
+                    </div>
+                </div>
+                
+                <div class="flex gap-3 pt-2 border-t border-gray-200 mt-4">
+                    <button type="button" onclick="closeModal('project-modal')" class="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm font-medium">Cancel</button>
+                    <button type="submit" class="flex-1 bg-primary text-white px-4 py-2.5 rounded-lg hover:bg-primary/90 text-sm font-medium">
+                        <span id="project-submit-text">Save Project</span>
                         <i id="project-submit-spinner" class="fas fa-spinner fa-spin ml-2 hidden"></i>
                     </button>
                 </div>
@@ -540,6 +1032,394 @@
                     <button type="submit" class="flex-1 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90">Save Event</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Project Template Modal -->
+    <div id="project-template-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center modal-overlay">
+        <div class="bg-white rounded-2xl p-6 w-full max-w-4xl mx-4 max-h-90vh overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold">Project Templates</h3>
+                <button onclick="closeModal('project-template-modal')" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div class="border border-gray-200 rounded-lg p-4 hover:border-primary cursor-pointer" onclick="useTemplate('web-development')">
+                    <div class="flex items-center mb-3">
+                        <i class="fas fa-code text-blue-500 text-xl mr-3"></i>
+                        <h4 class="font-semibold">Web Development</h4>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-3">Complete web application development lifecycle</p>
+                    <div class="flex justify-between text-xs text-gray-500">
+                        <span>12 Tasks</span>
+                        <span>3-6 Months</span>
+                    </div>
+                </div>
+                <div class="border border-gray-200 rounded-lg p-4 hover:border-primary cursor-pointer" onclick="useTemplate('mobile-app')">
+                    <div class="flex items-center mb-3">
+                        <i class="fas fa-mobile-alt text-green-500 text-xl mr-3"></i>
+                        <h4 class="font-semibold">Mobile App</h4>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-3">Native mobile application development</p>
+                    <div class="flex justify-between text-xs text-gray-500">
+                        <span>15 Tasks</span>
+                        <span>4-8 Months</span>
+                    </div>
+                </div>
+                <div class="border border-gray-200 rounded-lg p-4 hover:border-primary cursor-pointer" onclick="useTemplate('marketing-campaign')">
+                    <div class="flex items-center mb-3">
+                        <i class="fas fa-bullhorn text-purple-500 text-xl mr-3"></i>
+                        <h4 class="font-semibold">Marketing Campaign</h4>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-3">Comprehensive marketing campaign execution</p>
+                    <div class="flex justify-between text-xs text-gray-500">
+                        <span>8 Tasks</span>
+                        <span>1-3 Months</span>
+                    </div>
+                </div>
+                <div class="border border-gray-200 rounded-lg p-4 hover:border-primary cursor-pointer" onclick="useTemplate('product-launch')">
+                    <div class="flex items-center mb-3">
+                        <i class="fas fa-rocket text-red-500 text-xl mr-3"></i>
+                        <h4 class="font-semibold">Product Launch</h4>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-3">End-to-end product launch strategy</p>
+                    <div class="flex justify-between text-xs text-gray-500">
+                        <span>10 Tasks</span>
+                        <span>2-4 Months</span>
+                    </div>
+                </div>
+                <div class="border border-gray-200 rounded-lg p-4 hover:border-primary cursor-pointer" onclick="useTemplate('research-development')">
+                    <div class="flex items-center mb-3">
+                        <i class="fas fa-flask text-yellow-500 text-xl mr-3"></i>
+                        <h4 class="font-semibold">R&D Project</h4>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-3">Research and development initiative</p>
+                    <div class="flex justify-between text-xs text-gray-500">
+                        <span>6 Tasks</span>
+                        <span>6-12 Months</span>
+                    </div>
+                </div>
+                <div class="border border-gray-200 rounded-lg p-4 hover:border-primary cursor-pointer" onclick="useTemplate('infrastructure')">
+                    <div class="flex items-center mb-3">
+                        <i class="fas fa-server text-gray-500 text-xl mr-3"></i>
+                        <h4 class="font-semibold">Infrastructure</h4>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-3">IT infrastructure setup and maintenance</p>
+                    <div class="flex justify-between text-xs text-gray-500">
+                        <span>9 Tasks</span>
+                        <span>1-2 Months</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bulk Actions Modal -->
+    <div id="bulk-actions-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center modal-overlay">
+        <div class="bg-white rounded-2xl p-6 w-full max-w-md mx-4 max-h-90vh overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold">Bulk Actions</h3>
+                <button onclick="closeModal('bulk-actions-modal')" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="space-y-3">
+                <button onclick="bulkUpdateStatus()" class="w-full flex items-center px-4 py-3 text-left border border-gray-200 rounded-lg hover:bg-gray-50">
+                    <i class="fas fa-edit text-blue-500 mr-3"></i>
+                    <div>
+                        <div class="font-medium">Update Status</div>
+                        <div class="text-sm text-gray-500">Change status for selected projects</div>
+                    </div>
+                </button>
+                <button onclick="bulkUpdatePriority()" class="w-full flex items-center px-4 py-3 text-left border border-gray-200 rounded-lg hover:bg-gray-50">
+                    <i class="fas fa-flag text-yellow-500 mr-3"></i>
+                    <div>
+                        <div class="font-medium">Update Priority</div>
+                        <div class="text-sm text-gray-500">Change priority for selected projects</div>
+                    </div>
+                </button>
+                <button onclick="bulkAssignManager()" class="w-full flex items-center px-4 py-3 text-left border border-gray-200 rounded-lg hover:bg-gray-50">
+                    <i class="fas fa-user text-green-500 mr-3"></i>
+                    <div>
+                        <div class="font-medium">Assign Manager</div>
+                        <div class="text-sm text-gray-500">Assign project manager to selected projects</div>
+                    </div>
+                </button>
+                <button onclick="bulkArchive()" class="w-full flex items-center px-4 py-3 text-left border border-gray-200 rounded-lg hover:bg-gray-50">
+                    <i class="fas fa-archive text-purple-500 mr-3"></i>
+                    <div>
+                        <div class="font-medium">Archive Projects</div>
+                        <div class="text-sm text-gray-500">Archive selected projects</div>
+                    </div>
+                </button>
+                <button onclick="bulkDelete()" class="w-full flex items-center px-4 py-3 text-left border border-red-200 rounded-lg hover:bg-red-50 text-red-600">
+                    <i class="fas fa-trash mr-3"></i>
+                    <div>
+                        <div class="font-medium">Delete Projects</div>
+                        <div class="text-sm text-red-400">Permanently delete selected projects</div>
+                    </div>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Project Detail Modal -->
+    <div id="project-detail-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center modal-overlay">
+        <div class="bg-white rounded-2xl w-full max-w-6xl mx-4 max-h-[95vh] overflow-hidden flex flex-col">
+            <!-- Header -->
+            <div class="flex justify-between items-center p-6 border-b border-gray-200">
+                <div class="flex items-center space-x-4">
+                    <div class="flex items-center space-x-3">
+                        <div id="project-detail-status-indicator" class="w-4 h-4 rounded-full bg-blue-500"></div>
+                        <h3 class="text-2xl font-bold text-gray-800" id="project-detail-title">Project Title</h3>
+                        <span id="project-detail-priority" class="px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">Medium</span>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <button onclick="editProject(currentProjectId)" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 smooth-transition">
+                        <i class="fas fa-edit mr-2"></i>Edit
+                    </button>
+                    <button onclick="closeModal('project-detail-modal')" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="flex-1 overflow-hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-4 h-full">
+                    <!-- Project Info Sidebar -->
+                    <div class="lg:col-span-1 bg-gray-50 p-6 overflow-y-auto">
+                        <div class="space-y-6">
+                            <!-- Project Overview -->
+                            <div>
+                                <h4 class="font-semibold text-gray-800 mb-3">Project Overview</h4>
+                                <div class="space-y-3">
+                                    <div>
+                                        <span class="text-sm text-gray-600">Status</span>
+                                        <p id="project-detail-status" class="font-medium">Active</p>
+                                    </div>
+                                    <div>
+                                        <span class="text-sm text-gray-600">Progress</span>
+                                        <div class="mt-1">
+                                            <div class="bg-gray-200 rounded-full h-2">
+                                                <div id="project-detail-progress-bar" class="bg-blue-500 h-2 rounded-full" style="width: 0%"></div>
+                                            </div>
+                                            <span id="project-detail-progress-text" class="text-sm text-gray-600 mt-1">0%</span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <span class="text-sm text-gray-600">Start Date</span>
+                                        <p id="project-detail-start-date" class="font-medium">-</p>
+                                    </div>
+                                    <div>
+                                        <span class="text-sm text-gray-600">End Date</span>
+                                        <p id="project-detail-end-date" class="font-medium">-</p>
+                                    </div>
+                                    <div>
+                                        <span class="text-sm text-gray-600">Budget</span>
+                                        <p id="project-detail-budget" class="font-medium">$0</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Team Members -->
+                            <div>
+                                <h4 class="font-semibold text-gray-800 mb-3">Team Members</h4>
+                                <div id="project-detail-team" class="space-y-2">
+                                    <!-- Team members will be loaded here -->
+                                </div>
+                            </div>
+
+                            <!-- Recent Activity -->
+                            <div>
+                                <h4 class="font-semibold text-gray-800 mb-3">Recent Activity</h4>
+                                <div id="project-detail-activity" class="space-y-2 max-h-60 overflow-y-auto">
+                                    <!-- Activity will be loaded here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Main Content Area -->
+                    <div class="lg:col-span-3 overflow-hidden">
+                        <!-- Tab Navigation -->
+                        <div class="border-b border-gray-200 px-6">
+                            <nav class="flex space-x-8">
+                                <button onclick="switchProjectTab('kanban')" class="project-tab py-4 px-1 border-b-2 border-transparent text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 active" data-tab="kanban">
+                                    <i class="fas fa-columns mr-2"></i>Kanban Board
+                                </button>
+                                <button onclick="switchProjectTab('tasks')" class="project-tab py-4 px-1 border-b-2 border-transparent text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="tasks">
+                                    <i class="fas fa-tasks mr-2"></i>Task List
+                                </button>
+                                <button onclick="switchProjectTab('timeline')" class="project-tab py-4 px-1 border-b-2 border-transparent text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="timeline">
+                                    <i class="fas fa-calendar-alt mr-2"></i>Timeline
+                                </button>
+                                <button onclick="switchProjectTab('files')" class="project-tab py-4 px-1 border-b-2 border-transparent text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="files">
+                                    <i class="fas fa-folder mr-2"></i>Files
+                                </button>
+                                <button onclick="switchProjectTab('analytics')" class="project-tab py-4 px-1 border-b-2 border-transparent text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="analytics">
+                                    <i class="fas fa-chart-bar mr-2"></i>Analytics
+                                </button>
+                            </nav>
+                        </div>
+
+                        <!-- Tab Content -->
+                        <div class="flex-1 overflow-hidden">
+                            <!-- Kanban Board Tab -->
+                            <div id="project-kanban-tab" class="project-tab-content h-full">
+                                <div class="p-6 h-full">
+                                    <div class="flex justify-between items-center mb-4">
+                                        <h4 class="text-lg font-semibold">Task Board</h4>
+                                        <button onclick="openTaskModal()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                                            <i class="fas fa-plus mr-2"></i>Add Task
+                                        </button>
+                                    </div>
+                                    
+                                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 h-full">
+                                        <!-- To Do Column -->
+                                        <div class="bg-gray-50 rounded-lg p-4">
+                                            <div class="flex items-center justify-between mb-4">
+                                                <h5 class="font-semibold text-gray-800 flex items-center">
+                                                    <span class="w-3 h-3 bg-gray-500 rounded-full mr-2"></span>To Do
+                                                </h5>
+                                                <span class="bg-gray-200 text-gray-700 px-2 py-1 rounded-full text-sm" id="project-todo-count">0</span>
+                                            </div>
+                                            <div id="project-todo-tasks" class="space-y-3 min-h-96 overflow-y-auto" ondrop="dropProjectTask(event, 'todo')" ondragover="allowDrop(event)">
+                                                <!-- To Do tasks -->
+                                            </div>
+                                        </div>
+
+                                        <!-- In Progress Column -->
+                                        <div class="bg-blue-50 rounded-lg p-4">
+                                            <div class="flex items-center justify-between mb-4">
+                                                <h5 class="font-semibold text-gray-800 flex items-center">
+                                                    <span class="w-3 h-3 bg-blue-500 rounded-full mr-2"></span>In Progress
+                                                </h5>
+                                                <span class="bg-blue-200 text-blue-700 px-2 py-1 rounded-full text-sm" id="project-progress-count">0</span>
+                                            </div>
+                                            <div id="project-progress-tasks" class="space-y-3 min-h-96 overflow-y-auto" ondrop="dropProjectTask(event, 'in-progress')" ondragover="allowDrop(event)">
+                                                <!-- In Progress tasks -->
+                                            </div>
+                                        </div>
+
+                                        <!-- Review Column -->
+                                        <div class="bg-yellow-50 rounded-lg p-4">
+                                            <div class="flex items-center justify-between mb-4">
+                                                <h5 class="font-semibold text-gray-800 flex items-center">
+                                                    <span class="w-3 h-3 bg-yellow-500 rounded-full mr-2"></span>Review
+                                                </h5>
+                                                <span class="bg-yellow-200 text-yellow-700 px-2 py-1 rounded-full text-sm" id="project-review-count">0</span>
+                                            </div>
+                                            <div id="project-review-tasks" class="space-y-3 min-h-96 overflow-y-auto" ondrop="dropProjectTask(event, 'review')" ondragover="allowDrop(event)">
+                                                <!-- Review tasks -->
+                                            </div>
+                                        </div>
+
+                                        <!-- Done Column -->
+                                        <div class="bg-green-50 rounded-lg p-4">
+                                            <div class="flex items-center justify-between mb-4">
+                                                <h5 class="font-semibold text-gray-800 flex items-center">
+                                                    <span class="w-3 h-3 bg-green-500 rounded-full mr-2"></span>Done
+                                                </h5>
+                                                <span class="bg-green-200 text-green-700 px-2 py-1 rounded-full text-sm" id="project-done-count">0</span>
+                                            </div>
+                                            <div id="project-done-tasks" class="space-y-3 min-h-96 overflow-y-auto" ondrop="dropProjectTask(event, 'completed')" ondragover="allowDrop(event)">
+                                                <!-- Done tasks -->
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Task List Tab -->
+                            <div id="project-tasks-tab" class="project-tab-content h-full hidden">
+                                <div class="p-6">
+                                    <div class="flex justify-between items-center mb-4">
+                                        <h4 class="text-lg font-semibold">All Tasks</h4>
+                                        <div class="flex space-x-2">
+                                            <input type="text" placeholder="Search tasks..." class="px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                                            <select class="px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                                                <option value="">All Status</option>
+                                                <option value="todo">To Do</option>
+                                                <option value="in-progress">In Progress</option>
+                                                <option value="review">Review</option>
+                                                <option value="completed">Completed</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="overflow-x-auto">
+                                        <table class="w-full">
+                                            <thead class="bg-gray-50">
+                                                <tr>
+                                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Task</th>
+                                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Priority</th>
+                                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Assignee</th>
+                                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Due Date</th>
+                                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="project-tasks-table" class="bg-white divide-y divide-gray-200">
+                                                <!-- Task rows will be loaded here -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Timeline Tab -->
+                            <div id="project-timeline-tab" class="project-tab-content h-full hidden">
+                                <div class="p-6">
+                                    <h4 class="text-lg font-semibold mb-4">Project Timeline</h4>
+                                    <div id="project-timeline-chart" class="h-96 bg-gray-50 rounded-lg flex items-center justify-center">
+                                        <p class="text-gray-500">Timeline visualization will be rendered here</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Files Tab -->
+                            <div id="project-files-tab" class="project-tab-content h-full hidden">
+                                <div class="p-6">
+                                    <div class="flex justify-between items-center mb-4">
+                                        <h4 class="text-lg font-semibold">Project Files</h4>
+                                        <button class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                                            <i class="fas fa-upload mr-2"></i>Upload File
+                                        </button>
+                                    </div>
+                                    
+                                    <div id="project-files-list" class="space-y-3">
+                                        <!-- Files will be loaded here -->
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Analytics Tab -->
+                            <div id="project-analytics-tab" class="project-tab-content h-full hidden">
+                                <div class="p-6">
+                                    <h4 class="text-lg font-semibold mb-4">Project Analytics</h4>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div class="bg-white p-6 rounded-lg border">
+                                            <h5 class="font-semibold mb-3">Task Completion Rate</h5>
+                                            <div id="task-completion-chart" class="h-48 bg-gray-50 rounded flex items-center justify-center">
+                                                <p class="text-gray-500">Chart will be rendered here</p>
+                                            </div>
+                                        </div>
+                                        <div class="bg-white p-6 rounded-lg border">
+                                            <h5 class="font-semibold mb-3">Time Tracking</h5>
+                                            <div id="time-tracking-chart" class="h-48 bg-gray-50 rounded flex items-center justify-center">
+                                                <p class="text-gray-500">Chart will be rendered here</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 

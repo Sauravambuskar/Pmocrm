@@ -1,5 +1,5 @@
 // Configuration
-const API_BASE_URL = './api';
+const API_BASE_URL = '/api';
 
 // Global variables
 let currentSection = 'dashboard';
@@ -85,7 +85,10 @@ function setupEventListeners() {
 // API Helper functions
 async function apiRequest(endpoint, options = {}) {
     try {
-        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+        // Remove .php extension from endpoint for Vercel
+        const cleanEndpoint = endpoint.replace('.php', '');
+        
+        const response = await fetch(`${API_BASE_URL}${cleanEndpoint}`, {
             ...options,
             headers: {
                 'Content-Type': 'application/json',

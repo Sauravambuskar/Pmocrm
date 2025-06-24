@@ -423,10 +423,12 @@ class EnhancedDashboard {
         const mockData = {
             stats: {
                 total_contacts: 1247,
+                total_leads: 89,
                 active_projects: 23,
                 pending_tasks: 89,
                 total_revenue: 285000,
                 contacts_growth: '+18%',
+                leads_growth: '+24%',
                 projects_growth: '+12%',
                 tasks_due: '12 due today',
                 revenue_growth: '+24%'

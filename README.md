@@ -22,9 +22,18 @@ A comprehensive, enterprise-level Customer Relationship Management (CRM) and Pro
 - **Advanced Search**: Semantic search with filters
 - **Company Hierarchies**: Multi-level organization structures
 - **Custom Fields**: Flexible data collection
-- **Lead Scoring**: Automated lead qualification
 - **Communication Tracking**: Email, call, and meeting logs
 - **Data Import/Export**: Bulk operations and integrations
+
+### 🎯 Advanced Lead Management
+- **Lead Scoring**: Automated lead qualification with customizable rules
+- **Pipeline Management**: Visual lead progression through sales stages
+- **Lead Sources**: Track and analyze lead generation channels
+- **Conversion Analytics**: Detailed conversion funnel analysis
+- **Temperature Tracking**: Hot, warm, cold lead classification
+- **Activity Logging**: Complete interaction history
+- **Campaign Management**: Lead nurturing campaigns
+- **Conversion Tracking**: Lead-to-customer conversion metrics
 
 ### 🚀 Professional Project Management
 - **Multiple Project Views**: Grid, List, Kanban, Timeline, Gantt
@@ -146,6 +155,7 @@ CRMFORPROJECT/
 ├── api/                    # Serverless API functions
 │   ├── contacts.js        # Contact management API
 │   ├── dashboard.js       # Dashboard statistics API
+│   ├── leads.js           # Lead management API
 │   ├── projects.js        # Project management API
 │   └── tasks.js           # Task management API
 ├── lib/                   # Shared utilities
@@ -153,6 +163,7 @@ CRMFORPROJECT/
 ├── js/                    # Frontend JavaScript
 │   └── app.js            # Main application logic
 ├── index.html            # Main application page
+├── leads-enterprise.html # Advanced leads management page
 ├── login.html            # Login page
 ├── package.json          # Node.js dependencies
 ├── vercel.json           # Vercel configuration
@@ -186,6 +197,19 @@ All API endpoints are serverless functions optimized for Vercel:
 - `POST /api/tasks` - Create new task
 - `PUT /api/tasks?id={id}` - Update task
 - `DELETE /api/tasks?id={id}` - Delete task
+
+### Leads
+- `GET /api/leads?action=list` - List all leads with filtering
+- `GET /api/leads?action=details&id={id}` - Get specific lead details
+- `GET /api/leads?action=activities&lead_id={id}` - Get lead activities
+- `GET /api/leads?action=sources` - Get lead sources
+- `GET /api/leads?action=statuses` - Get lead statuses
+- `GET /api/leads?action=analytics` - Get leads analytics
+- `POST /api/leads?action=create` - Create new lead
+- `POST /api/leads?action=activity` - Add lead activity
+- `POST /api/leads?action=convert` - Convert lead to contact
+- `PUT /api/leads?id={id}` - Update lead
+- `DELETE /api/leads?id={id}` - Delete lead
 
 ## 🎨 Features Overview
 

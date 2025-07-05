@@ -488,12 +488,24 @@
         ::-webkit-scrollbar-thumb:hover {
             background: var(--text-secondary);
         }
+
+        .nav-item:focus, .header-btn:focus, .user-menu:focus {
+            outline: 2px solid var(--primary-color);
+            outline-offset: 2px;
+            background: var(--bg-secondary);
+            color: var(--primary-color);
+        }
+
+        .nav-item:active, .header-btn:active, .user-menu:active {
+            transform: scale(0.98);
+            background: var(--bg-tertiary);
+        }
     </style>
 </head>
 <body>
     <div class="app-container">
         <!-- Sidebar -->
-        <nav class="sidebar">
+        <nav class="sidebar" role="navigation" aria-label="Main Sidebar Navigation" tabindex="0">
             <div class="sidebar-header">
                 <div class="logo">
                     <i class="fas fa-chart-line"></i>
@@ -502,47 +514,47 @@
             </div>
             
             <div class="nav-menu">
-                <a href="#" class="nav-item active">
+                <a href="#" class="nav-item active" tabindex="0" aria-current="page">
                     <i class="fas fa-tachometer-alt"></i>
                     <span>Dashboard</span>
                 </a>
-                <a href="#" class="nav-item">
+                <a href="#" class="nav-item" tabindex="0">
                     <i class="fas fa-users"></i>
                     <span>Contacts</span>
                 </a>
-                <a href="#" class="nav-item">
+                <a href="#" class="nav-item" tabindex="0">
                     <i class="fas fa-building"></i>
                     <span>Companies</span>
                 </a>
-                <a href="projects-enterprise.html" class="nav-item">
+                <a href="projects-enterprise.html" class="nav-item" tabindex="0">
                     <i class="fas fa-project-diagram"></i>
                     <span>Projects</span>
                 </a>
-                <a href="leads-enterprise.html" class="nav-item">
+                <a href="leads-enterprise.html" class="nav-item" tabindex="0">
                     <i class="fas fa-user-plus"></i>
                     <span>Leads</span>
                 </a>
-                <a href="#" class="nav-item">
+                <a href="#" class="nav-item" tabindex="0">
                     <i class="fas fa-tasks"></i>
                     <span>Tasks</span>
                 </a>
-                <a href="#" class="nav-item">
+                <a href="#" class="nav-item" tabindex="0">
                     <i class="fas fa-handshake"></i>
                     <span>Deals</span>
                 </a>
-                <a href="#" class="nav-item">
+                <a href="#" class="nav-item" tabindex="0">
                     <i class="fas fa-file-invoice-dollar"></i>
                     <span>Invoices</span>
                 </a>
-                <a href="#" class="nav-item">
+                <a href="#" class="nav-item" tabindex="0">
                     <i class="fas fa-chart-bar"></i>
                     <span>Reports</span>
                 </a>
-                <a href="#" class="nav-item">
+                <a href="#" class="nav-item" tabindex="0">
                     <i class="fas fa-calendar"></i>
                     <span>Calendar</span>
                 </a>
-                <a href="#" class="nav-item">
+                <a href="#" class="nav-item" tabindex="0">
                     <i class="fas fa-cog"></i>
                     <span>Settings</span>
                 </a>
@@ -552,27 +564,27 @@
         <!-- Main Content -->
         <div class="main-content">
             <!-- Header -->
-            <header class="header">
+            <header class="header" role="banner" aria-label="Main Header" tabindex="0">
                 <div class="search-container">
                     <i class="fas fa-search search-icon"></i>
                     <input type="text" class="search-input" placeholder="Search contacts, projects, tasks..." id="global-search">
                 </div>
                 
                 <div class="header-actions">
-                    <button class="header-btn" id="theme-toggle" title="Toggle Theme">
+                    <button class="header-btn" id="theme-toggle" title="Toggle Theme" aria-label="Toggle Theme" tabindex="0">
                         <i class="fas fa-moon"></i>
                     </button>
                     
-                    <button class="header-btn" title="Notifications">
+                    <button class="header-btn" title="Notifications" aria-label="Notifications" tabindex="0">
                         <i class="fas fa-bell"></i>
                         <span class="notification-badge" id="notification-badge">3</span>
                     </button>
                     
-                    <button class="header-btn" title="Messages">
+                    <button class="header-btn" title="Messages" aria-label="Messages" tabindex="0">
                         <i class="fas fa-envelope"></i>
                     </button>
                     
-                    <div class="user-menu">
+                    <div class="user-menu" role="button" aria-haspopup="true" aria-expanded="false" tabindex="0">
                         <div class="user-avatar">JD</div>
                         <div>
                             <div style="font-size: 0.875rem; font-weight: 500;">John Doe</div>
